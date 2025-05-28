@@ -14,11 +14,11 @@ const port = env.PORT || 8080;
 (async () => {
   try {
     await sequelize.authenticate();
-    console.log("✅ DB connected");
+    console.log("DB connected");
     await sequelize.sync();
-    console.log("✅ DB synced");
+    console.log("DB synced");
   } catch (error) {
-    console.error("❌ DB error:", error);
+    console.error("DB error:", error);
   }
 })();
 
