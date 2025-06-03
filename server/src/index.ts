@@ -3,11 +3,18 @@ import "dotenv/config";
 import env from "./config/env.config";
 import sequelize from "./config/db.config";
 import routes from "./routes";
+import cors from "cors";
+import errorHandler from "./middlewares/error-handler.middleware";
 
 const app = express();
 app.use(express.json());
-
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 app.use(routes);
+app.use(errorHandler);
 
 const port = env.PORT || 8080;
 

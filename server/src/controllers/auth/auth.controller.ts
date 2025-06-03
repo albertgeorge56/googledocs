@@ -12,8 +12,7 @@ export default class AuthController {
     if (!user) return res.status(401).json({ errors: userNotFound });
     const validPassword = UserService.checkPassword(user, password);
     if (!validPassword) return res.status(401).json({ errors: userNotFound });
-    if (!user.isVerified)
-      return res.status(401).json({ errors: emailNotVerified });
+    if (!user.isVerified) res.status(403).json({ errors: emailNotVerified });
     const authResponse = await UserService.generateAuthResponse(user);
     return res.status(200).json(authResponse);
   });

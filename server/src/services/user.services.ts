@@ -2,6 +2,7 @@ import User from "../db/models/user.model";
 import { compare, genSalt, hash } from "bcrypt";
 import jwt from "jsonwebtoken";
 import RefreshToken from "../db/models/refresh-token.model";
+import MailService from "./mail.services";
 
 export default class UserService {
   static findUserByEmail = async (email: string): Promise<User | null> => {
@@ -17,7 +18,29 @@ export default class UserService {
       password: hashedPassword,
       verificationToken,
     });
+    await UserService.sendVerificationMail(user);
   };
+
+  static sendPasswordResetMail = async (user: User) => {
+    const mail = {
+      from: "georgeynr@gmail.com",
+      to: user.email,
+      subject: "Reset your password",
+      text: `http://localhost:3000/user/reset-email/${user.passwordResetToken}`,
+    };
+    await MailService.sendMail(mail);
+  };
+
+  private static sendVerificationMail = async (user: User) => {
+    const mail = {
+      from: "georgeynr@gmail.com",
+      to: user.email,
+      subject: "Welcome to google docs",
+      text: `Click the following link to verify your email: http://localhost:3000/user/verify-email/${user.verificationToken}`,
+    };
+    await MailService.sendMail(mail);
+  };
+
   static checkPassword = async (
     user: User,
     password: string
@@ -53,17 +76,21 @@ export default class UserService {
     await RefreshToken.create({ token: refreshToken, userId: user.id });
     return { accessToken, refreshToken };
   };
+
   static getIsTokenActive = async (token: string): Promise<boolean> => {
     const refreshToken = await RefreshToken.findOne({ where: { token } });
     return refreshToken != null;
   };
+
   static logoutUser = async (userId: number) => {
     await RefreshToken.destroy({ where: { userId } });
   };
+
   static findUserById = async (id: number): Promise<User | null> => {
     const user = await User.findByPk(id);
     return user;
   };
+
   static resetpassword = async (user: User) => {
     const passwordResetToken = jwt.sign(
       { id: user.id, email: user.email },
@@ -73,7 +100,9 @@ export default class UserService {
       }
     );
     await user.update({ passwordResetToken });
+    await UserService.sendPasswordResetMail(user);
   };
+
   static findUserByPasswordResetToken = async (
     email: string,
     token: string

@@ -3,6 +3,7 @@ import asyncHandler from "../../utils/asyncHandler";
 import Document from "../../db/models/document.model";
 import User from "../../db/models/user.model";
 import DocumentUser from "../../db/models/document-user.model";
+import MailService from "../../services/mail.services";
 
 export default class ShareController {
   static create = asyncHandler(async (req: Request, res: Response) => {
@@ -25,6 +26,7 @@ export default class ShareController {
       subject: `${req.user.email} shared a document with you.`,
       text: `Click the following link to view and edit the document: http://localhost:3000/document/${id}`,
     };
+    await MailService.sendMail(mail);
     return res.status(201).json(documentUser);
   });
 

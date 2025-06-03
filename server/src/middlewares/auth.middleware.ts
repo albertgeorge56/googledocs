@@ -1,5 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import jwt, { VerifyErrors } from "jsonwebtoken";
+import RoleEnum from "../types/enums/role-enum";
+import UserRole from "../db/models/user-role.model";
+import Role from "../db/models/role.model";
 
 const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers["authorization"];
@@ -20,6 +23,23 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
       }
     }
   );
+};
+
+export const authorize = (permittedRoles: RoleEnum[]) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) return void res.sendStatus(401);
+    const userId = req.user.id;
+    UserRole.findAll({ where: { userId }, include: Role })
+      .then((data) => {
+        const roles = data.map((userRole) => userRole.role.name);
+        if (permittedRoles.some((prole) => roles.includes(prole))) next();
+        return res.sendStatus(403);
+      })
+      .catch((error) => {
+        console.log(error);
+        return res.sendStatus(403);
+      });
+  };
 };
 
 export default authMiddleware;
